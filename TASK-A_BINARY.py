@@ -7,7 +7,7 @@ def generate_stalls(n, min_val=1, max_val=100):
     return stalls
     
 def distance_OK(stalls, d, cows):
-    """Checks if it's possible to place 'cows' with at least 'd' distance apart."""
+    #Checks if it's possible to place 'cows' with at least 'd' distance apart
     count = 1  # Place first cow in the first stall
     last_position = stalls[0]
     
@@ -21,7 +21,7 @@ def distance_OK(stalls, d, cows):
     return False
 
 def aggressiveCows(stalls, cows):
-    """Finds the maximum minimum distance to place cows in stalls using binary search."""
+    # Finds the maximum minimum distance to place cows in stalls using binary search.
     low, high = 1, stalls[-1] - stalls[0]
     best_d = 0
     
