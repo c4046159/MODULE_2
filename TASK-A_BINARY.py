@@ -7,7 +7,7 @@ def generate_stalls(n, min_val=1, max_val=100):
     return stalls
     
 def distance_OK(stalls, d, cows):
-    #Checks if it's possible to place 'cows' with at least 'd' distance apart
+    # Checks if it's possible to place 'cows' with at least 'd' distance apart.
     count = 1  # Place first cow in the first stall
     last_position = stalls[0]
     
