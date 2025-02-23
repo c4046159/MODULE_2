@@ -1,51 +1,103 @@
-
 import random
+import csv
 
-def generate_initial_solution(n):
-    """Generates a random initial solution (binary list)."""
-    return [random.choice([0, 1]) for _ in range(n)]
+# Fitness function: Negative absolute difference between left and right pans
+def calculate_fitness(solution, weights):
+    left_sum = sum(w for w, s in zip(weights, solution) if s == 0)
+    right_sum = sum(w for w, s in zip(weights, solution) if s == 1)
+    return -abs(left_sum - right_sum)
 
-def fitness(solution, weights):
-    """Computes the absolute difference between two sides of the scale."""
-    left_weight = sum(weights[i] for i in range(len(solution)) if solution[i] == 0)
-    right_weight = sum(weights[i] for i in range(len(solution)) if solution[i] == 1)
-    return abs(left_weight - right_weight)
+# Generate a random initial solution
+def random_solution(size):
+    return [random.randint(0, 1) for _ in range(size)]
 
-def mutate(solution):
-    """Performs a small change by flipping one bit."""
-    new_solution = solution[:]
+# Small change: Flip a random bit
+def get_neighbor(solution):
+    neighbor = solution.copy()
     index = random.randint(0, len(solution) - 1)
-    new_solution[index] = 1 - new_solution[index]
-    return new_solution
+    neighbor[index] = 1 - neighbor[index]  # Flip 0 to 1 or 1 to 0
+    return neighbor
 
-def hill_climb(weights, max_iterations=1000):
-    """Performs standard hill climbing on the Scales Problem."""
-    solution = generate_initial_solution(len(weights))
-    best_fitness = fitness(solution, weights)
+# Hill Climbing for one restart
+def hill_climbing(weights, max_iterations):
+    current_solution = random_solution(len(weights))
+    current_fitness = calculate_fitness(current_solution, weights)
     
     for _ in range(max_iterations):
-        new_solution = mutate(solution)
-        new_fitness = fitness(new_solution, weights)
-        if new_fitness < best_fitness:
-            solution, best_fitness = new_solution, new_fitness
+        neighbor = get_neighbor(current_solution)
+        neighbor_fitness = calculate_fitness(neighbor, weights)
+        if neighbor_fitness > current_fitness:  # Maximize fitness
+            current_solution = neighbor
+            current_fitness = neighbor_fitness
     
-    return solution, best_fitness
+    return current_solution, current_fitness
 
-def random_restart_hill_climbing(weights, num_restarts=10, max_iterations=1000):
-    """Performs RRHC with multiple restarts."""
+# Random Restart Hill Climbing
+def random_restart_hill_climbing(weights, num_restarts, max_iterations):
     best_solution = None
-    best_fitness = float('inf')
+    best_fitness = float('-inf')
+    results = []
     
-    for _ in range(num_restarts):
-        solution, fitness_value = hill_climb(weights, max_iterations)
-        if fitness_value < best_fitness:
-            best_solution, best_fitness = solution, fitness_value
+    for restart in range(num_restarts):
+        solution, fitness = hill_climbing(weights, max_iterations)
+        results.append((restart, solution, fitness))
+        if fitness > best_fitness:
+            best_solution = solution
+            best_fitness = fitness
     
-    return best_solution, best_fitness
+    return best_solution, best_fitness, results
+
+# Auxiliary method: Write dataset to CSV
+def write_dataset_to_csv(weights, filename="dataset.csv"):
+    with open(filename, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Weight"])
+        for w in weights:
+            writer.writerow([w])
+
+# Auxiliary method: Read dataset from CSV
+def read_dataset_from_csv(filename="dataset.csv"):
+    weights = []
+    with open(filename, 'r') as f:
+        reader = csv.reader(f)
+        next(reader)  # Skip header
+        for row in reader:
+            weights.append(int(row[0]))
+    return weights
+
+# Auxiliary method: Write results to CSV
+def write_results_to_csv(results, filename="results.csv"):
+    with open(filename, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Restart", "Solution", "Fitness"])
+        for restart, solution, fitness in results:
+            writer.writerow([restart, solution, fitness])
 
 # Example usage
 if __name__ == "__main__":
-    weights = [1, 3, 4, 7, 9, 11, 14, 18]  # Example dataset
-    best_solution, best_fitness = random_restart_hill_climbing(weights)
-    print("Best Solution:", best_solution)
-    print("Best Fitness:", best_fitness)
+    # Sample dataset from Appendix (assumed from week 6)
+    weights = [3, 1, 4, 1, 5]
+    
+    # Write dataset to CSV
+    write_dataset_to_csv(weights)
+    
+    # Read dataset from CSV
+    weights = read_dataset_from_csv()
+    
+    # Run RRHC
+    num_restarts = 10
+    max_iterations = 100
+    best_solution, best_fitness, results = random_restart_hill_climbing(
+        weights, num_restarts, max_iterations
+    )
+    
+    # Write results to CSV
+    write_results_to_csv(results)
+    
+    # Print results
+    print(f"Weights: {weights}")
+    print(f"Best Solution: {best_solution}")
+    print(f"Best Fitness: {best_fitness}")
+    left_sum = sum(w for w, s in zip(weights, best_solution) if s == 0)
+    right_sum = sum(w for w, s in zip(weights, best_solution) if s == 1)
+    print(f"Left Pan: {left_sum}, Right Pan: {right_sum}")
