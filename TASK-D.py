@@ -7,11 +7,11 @@ def calculate_fitness(solution, weights):
     right_sum = sum(w for w, s in zip(weights, solution) if s == 1)
     return -abs(left_sum - right_sum)
 
-# Generate a random initial solution
+# Generate a random initial solution (0 = left pan, 1 = right pan)
 def random_solution(size):
     return [random.randint(0, 1) for _ in range(size)]
 
-# Small change: Flip a random bit
+# Small change: Flip a random bit in the solution
 def get_neighbor(solution):
     neighbor = solution.copy()
     index = random.randint(0, len(solution) - 1)
@@ -26,7 +26,7 @@ def hill_climbing(weights, max_iterations):
     for _ in range(max_iterations):
         neighbor = get_neighbor(current_solution)
         neighbor_fitness = calculate_fitness(neighbor, weights)
-        if neighbor_fitness > current_fitness:  # Maximize fitness
+        if neighbor_fitness > current_fitness:  # Maximize fitness (minimize difference)
             current_solution = neighbor
             current_fitness = neighbor_fitness
     
@@ -47,7 +47,7 @@ def random_restart_hill_climbing(weights, num_restarts, max_iterations):
     
     return best_solution, best_fitness, results
 
-# Auxiliary method: Write dataset to CSV
+# Write dataset to CSV
 def write_dataset_to_csv(weights, filename="dataset.csv"):
     with open(filename, 'w', newline='') as f:
         writer = csv.writer(f)
@@ -55,36 +55,33 @@ def write_dataset_to_csv(weights, filename="dataset.csv"):
         for w in weights:
             writer.writerow([w])
 
-# Auxiliary method: Read dataset from CSV
+# Read dataset from CSV without defaults
 def read_dataset_from_csv(filename="dataset.csv"):
     weights = []
     with open(filename, 'r') as f:
         reader = csv.reader(f)
-        next(reader)  # Skip header
+        next(reader)  # Skip header row ("Weight")
         for row in reader:
-            weights.append(int(row[0]))
+            if row:  # Check if row is not empty
+                weights.append(int(row[0]))
+    if not weights:
+        raise ValueError("No weights found in the CSV file.")
     return weights
 
-# Auxiliary method: Write results to CSV
-def write_results_to_csv(results, filename="results.csv"):
+# Write results to CSV
+def write_results_to_csv(results, filename="results_TASK-D.csv"):
     with open(filename, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["Restart", "Solution", "Fitness"])
         for restart, solution, fitness in results:
             writer.writerow([restart, solution, fitness])
 
-# Example usage
+# Main execution
 if __name__ == "__main__":
-    # Sample dataset from Appendix (assumed from week 6)
-    weights = [3, 1, 4, 1, 5]
-    
-    # Write dataset to CSV
-    write_dataset_to_csv(weights)
-    
-    # Read dataset from CSV
+    # Read weights from dataset.csv
     weights = read_dataset_from_csv()
     
-    # Run RRHC
+    # Run Random Restart Hill Climbing
     num_restarts = 10
     max_iterations = 100
     best_solution, best_fitness, results = random_restart_hill_climbing(
