@@ -63,7 +63,7 @@ def read_dataset_from_csv(filename="dataset.csv"):
         next(reader)  # Skip header row ("Weight")
         for row in reader:
             if row:  # Check if row is not empty
-                weights.append(int(row[0]))
+                weights.append(float(row[0]))
     if not weights:
         raise ValueError("No weights found in the CSV file.")
     return weights
